@@ -67,7 +67,7 @@ void MainWindow::on_pushButtonStart_clicked( ) {
     ui->statusBar->showMessage( "Nenhum arquivo encontrado.", 2000 );
     return;
   }
-  QProgressDialog progress( "Copying files...", "Abort Copy", 0, numFiles, this );
+  QProgressDialog progress( "Processando...", "Cancelar", 0, numFiles, this );
   progress.setWindowModality( Qt::WindowModal );
   progress.show( );
   progress.setValue( 0 );
@@ -83,7 +83,7 @@ void MainWindow::on_pushButtonStart_clicked( ) {
     painter.drawImage( 0, 0, img);
 
     painter.setCompositionMode( QPainter::CompositionMode_SourceOver );
-    painter.drawImage( img.width() - logo.width(),  img.height() - logo.height(), logo );
+    painter.drawImage( img.width() - logo.width() - 20,  img.height() - logo.height(), logo );
 
     painter.end( );
 /*

@@ -18,3 +18,14 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    resources.qrc
+
+win32{
+RC_FILE = windows.rc
+DISTFILES += windows.rc
+}
+
+DISTFILES += \
+    windows.rc
