@@ -1,9 +1,9 @@
+#include "ipmodule.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QFileDialog>
 #include <QFileInfoList>
-#include <QPainter>
 #include <QSettings>
 #include <QThread>
 #include <qprogressdialog.h>
@@ -58,44 +58,28 @@ void MainWindow::on_pushButtonLogo_clicked( ) {
 }
 
 void MainWindow::on_pushButtonStart_clicked( ) {
-  QStringList filters;
-  QFileInfoList files = QDir( ui->lineEditEntrada->text( ) ).entryInfoList( filters, QDir::Files, QDir::Time );
-  QDir outDir( ui->lineEditSaida->text( ) );
-  QImage logo = QImage( ui->lineEditLogo->text( ) ).scaledToWidth( 120, Qt::SmoothTransformation );
-  int numFiles = files.size( );
-  if( numFiles == 0 ) {
-    ui->statusBar->showMessage( "Nenhum arquivo encontrado.", 2000 );
-    return;
+  ipm = new IPModule( ui->lineEditEntrada->text( ), ui->lineEditLogo->text( ), ui->lineEditSaida->text( ) );
+  progress = new QProgressDialog( "Processando...", "Cancelar", 0, ipm->numFiles( ), this );
+  progress->setWindowModality( Qt::WindowModal );
+
+  progress->show( );
+  QThread *thread = new QThread;
+  ipm->moveToThread( thread );
+  connect( thread, &QThread::started, ipm, &IPModule::run );
+  connect( ipm, &IPModule::updateProgress, progress, &QProgressDialog::setValue );
+  connect( progress, &QProgressDialog::canceled, ipm, &IPModule::cancel );
+  connect( ipm, &IPModule::finished, thread, &QThread::quit );
+  connect( ipm, &IPModule::finished, progress, &QProgressDialog::done );
+  connect( ipm, &IPModule::finished, this, &MainWindow::finished );
+  connect( ipm, &IPModule::finished, thread, &QThread::deleteLater );
+  connect( ipm, &IPModule::finished, ipm, &IPModule::deleteLater );
+  connect( ipm, &IPModule::finished, progress, &QProgressDialog::deleteLater );
+
+  thread->start( );
+}
+
+void MainWindow::finished( int result ) {
+  if( result == 0 ) {
+    ui->statusBar->showMessage( "Operação terminada com sucesso!", 2000 );
   }
-  QProgressDialog progress( "Processando...", "Cancelar", 0, numFiles, this );
-  progress.setWindowModality( Qt::WindowModal );
-  progress.show( );
-  progress.setValue( 0 );
-  for( int i = 0; i < numFiles; i++ ) {
-    QImage img = QImage( files[ i ].absoluteFilePath( ), 0 ).scaled( 1024, 1024, Qt::KeepAspectRatio, Qt::SmoothTransformation );
-    QImage imageWithOverlay = QImage( img.size( ), QImage::Format_ARGB32_Premultiplied );
-    QPainter painter( &imageWithOverlay );
-
-    painter.setCompositionMode( QPainter::CompositionMode_Source );
-    painter.fillRect( imageWithOverlay.rect( ), Qt::transparent );
-
-    painter.setCompositionMode( QPainter::CompositionMode_SourceOver );
-    painter.drawImage( 0, 0, img);
-
-    painter.setCompositionMode( QPainter::CompositionMode_SourceOver );
-    painter.drawImage( img.width() - logo.width() - 20,  img.height() - logo.height(), logo );
-
-    painter.end( );
-/*
- *    QPixmap pixmap = QPixmap::fromImage( img );
- *    pixmap.toImage( ).save( outDir.absoluteFilePath( files[ i ].fileName( ) ) );
- */
-    imageWithOverlay.save( outDir.absoluteFilePath( files[ i ].fileName( ) ) );
-    progress.setValue( i );
-    if( progress.wasCanceled( ) ) {
-      break;
-    }
-  }
-  progress.setValue( numFiles );
-  ui->statusBar->showMessage( "Operação terminada.", 2000 );
 }

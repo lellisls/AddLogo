@@ -13,9 +13,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    ipmodule.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    ipmodule.h
 
 FORMS    += mainwindow.ui
 
@@ -25,7 +27,13 @@ RESOURCES += \
 win32{
 RC_FILE = windows.rc
 DISTFILES += windows.rc
+LIBS += -lGdiplus
+DEFINES += IS_WINDOWS_PLATFORM
+
+SOURCES += qimgorient.cpp
+HEADERS += qimgorient.h
 }
 
 DISTFILES += \
     windows.rc
+
