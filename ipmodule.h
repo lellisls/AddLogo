@@ -9,21 +9,27 @@
 class IPModule : public QObject {
   Q_OBJECT
 public:
-  explicit IPModule( QString inputFolder, QString logo, QString saida, QObject *parent = 0 );
-  int numFiles();
+  explicit IPModule( const QFileInfoList &files,
+                     int numThread,
+                     int numThreads,
+                     QImage logo,
+                     QString saida,
+                     QObject *parent = 0 );
 signals:
-  void finished( int result );
   void updateProgress( int value );
   void error( QString err );
+  void finished( int result );
 
 public slots:
   void run( );
-  void cancel();
+  void cancel( );
 
 private:
   QFileInfoList files;
-  QDir outDir;
+  int numThread;
+  int numThreads;
   QImage logo;
+  QDir outDir;
   bool canceled;
 };
 

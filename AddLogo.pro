@@ -13,16 +13,17 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    ipmodule.cpp
+    mainwindow.cpp \
+    ipmodule.cpp \
+    controller.cpp
 
 HEADERS  += mainwindow.h \
-    ipmodule.h
+    ipmodule.h \
+    controller.h
 
 FORMS    += mainwindow.ui
 
-RESOURCES += \
-    resources.qrc
+RESOURCES += resources.qrc
 
 win32{
 RC_FILE = windows.rc

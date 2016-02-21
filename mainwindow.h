@@ -4,11 +4,14 @@
 #include "ipmodule.h"
 
 #include <QMainWindow>
+#include <QMutex>
 #include <QProgressDialog>
 
 namespace Ui {
   class MainWindow;
 }
+
+class Controller;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -16,6 +19,9 @@ class MainWindow : public QMainWindow {
 public:
   explicit MainWindow( QWidget *parent = 0 );
   ~MainWindow( );
+
+signals:
+  void finishProgress( int status );
 
 private slots:
   void on_pushButtonEntrada_clicked( );
@@ -26,12 +32,18 @@ private slots:
 
   void on_pushButtonStart_clicked( );
 
-  void finished( int result );
+public slots:
+  void finished(int);
+
+  void updateTheProgress( int value );
+
+  void cancel( );
 
 private:
   Ui::MainWindow *ui;
   QProgressDialog *progress;
-  IPModule *ipm;
+  Controller *controller;
+  bool canceled;
 };
 
 #endif /* MAINWINDOW_H */

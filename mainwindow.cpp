@@ -1,9 +1,12 @@
+#include "controller.h"
 #include "ipmodule.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QDebug>
 #include <QFileDialog>
 #include <QFileInfoList>
+#include <QMessageBox>
 #include <QSettings>
 #include <QThread>
 #include <qprogressdialog.h>
@@ -58,28 +61,49 @@ void MainWindow::on_pushButtonLogo_clicked( ) {
 }
 
 void MainWindow::on_pushButtonStart_clicked( ) {
-  ipm = new IPModule( ui->lineEditEntrada->text( ), ui->lineEditLogo->text( ), ui->lineEditSaida->text( ) );
-  progress = new QProgressDialog( "Processando...", "Cancelar", 0, ipm->numFiles( ), this );
+  controller = new Controller( ui->lineEditEntrada->text( ),
+                               ui->lineEditLogo->text( ),
+                               ui->lineEditSaida->text( ),
+                               this );
+  canceled = false;
+  progress = new QProgressDialog( "Iniciando...", "Cancelar", 0, controller->size( ) - 1, this );
   progress->setWindowModality( Qt::WindowModal );
-
-  progress->show( );
-  QThread *thread = new QThread;
-  ipm->moveToThread( thread );
-  connect( thread, &QThread::started, ipm, &IPModule::run );
-  connect( ipm, &IPModule::updateProgress, progress, &QProgressDialog::setValue );
-  connect( progress, &QProgressDialog::canceled, ipm, &IPModule::cancel );
-  connect( ipm, &IPModule::finished, thread, &QThread::quit );
-  connect( ipm, &IPModule::finished, progress, &QProgressDialog::done );
-  connect( ipm, &IPModule::finished, this, &MainWindow::finished );
-  connect( ipm, &IPModule::finished, thread, &QThread::deleteLater );
-  connect( ipm, &IPModule::finished, ipm, &IPModule::deleteLater );
-  connect( ipm, &IPModule::finished, progress, &QProgressDialog::deleteLater );
+/*  progress->show( ); */
+  QThread *thread = new QThread( this );
+  controller->moveToThread( thread );
+  connect( thread, &QThread::started, controller, &Controller::run );
+  connect( controller, &Controller::finished, this, &MainWindow::finished );
+  connect( controller, &Controller::finished, thread, &QThread::quit );
+  connect( controller, &Controller::finished, thread, &QThread::deleteLater );
+/*  connect( progress, &QProgressDialog::canceled, controller, &Controller::cancel ); */
+  connect( progress, &QProgressDialog::canceled, this, &MainWindow::cancel );
 
   thread->start( );
+
+  ui->pushButtonStart->setEnabled( false );
 }
 
-void MainWindow::finished( int result ) {
-  if( result == 0 ) {
-    ui->statusBar->showMessage( "Operação terminada com sucesso!", 2000 );
+void MainWindow::finished( int ) {
+  if( canceled ) {
+    ui->statusBar->showMessage("A operação foi cancelada!", 3000);
+  }else{
+    QMessageBox msgBox;
+    msgBox.setText( tr( "Operação terminada com sucesso!" ) );
+    msgBox.exec( );
   }
+  ui->pushButtonStart->setEnabled( true );
+}
+
+void MainWindow::updateTheProgress( int value ) {
+  if( progress && !canceled ) {
+    value = progress->value( ) + 1;
+    progress->setValue( value );
+    progress->setLabelText( tr( "Processando %1 de %2" ).arg( value + 1 ).arg( progress->maximum( ) + 1 ) );
+  }
+}
+
+void MainWindow::cancel( ) {
+  canceled = true;
+  controller->cancel( );
+  ui->pushButtonStart->setEnabled( true );
 }

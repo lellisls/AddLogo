@@ -3,25 +3,30 @@
 #include <QDebug>
 #include <QPainter>
 
-IPModule::IPModule( QString inputFolder, QString logo_path, QString outputFolder, QObject *parent ) :
+IPModule::IPModule( const QFileInfoList &files,
+                    int numThread,
+                    int numThreads,
+                    QImage logo,
+                    QString outputFolder,
+                    QObject *parent ) :
   QObject( parent ),
+  files( files ),
+  numThread( numThread ),
+  numThreads( numThreads ),
+  logo( logo ),
   outDir( outputFolder ) {
-  QStringList filters;
-  files = QDir( inputFolder ).entryInfoList( filters, QDir::Files, QDir::Time );
-  logo = QImage( logo_path ).scaledToWidth( 120, Qt::SmoothTransformation );
-}
-
-int IPModule::numFiles( ) {
-  return( files.size( ) );
 }
 
 void IPModule::run( ) {
   int nFiles = files.size( );
   canceled = false;
-  for( int i = 0; i < nFiles; i++ ) {
+  qDebug( ) << "===== Thread: " << numThread << "/" << numThreads << " =====";
 
-    QImage img = QImgOrient::loadImage( files[ i ].absoluteFilePath( ) );
-    if(!img.isNull()){
+  for( int i = numThread; i < nFiles; i += numThreads ) {
+    qDebug( ) << "Pos: " << i << "/" << nFiles;
+
+    QImage img = QImgOrient::loadImage( files.at( i ).absoluteFilePath( ) );
+    if( !img.isNull( ) ) {
       img = img.scaled( 1024, 1024, Qt::KeepAspectRatio, Qt::SmoothTransformation );
       QImage imageWithOverlay = QImage( img.size( ), QImage::Format_ARGB32_Premultiplied );
       QPainter painter( &imageWithOverlay );
@@ -41,12 +46,13 @@ void IPModule::run( ) {
     }
     emit updateProgress( i );
     if( canceled ) {
-
-      break;
+      qDebug( ) << "===== Thread forced to finish! =====";
+      emit( finished( 1 ) );
+      return;
     }
   }
-  qDebug( ) << "FINISHED";
-  emit finished( 0 );
+  qDebug( ) << "===== Thread: " << numThread << "/" << numThreads << " finished! =====";
+  emit( finished( 0 ) );
 }
 
 void IPModule::cancel( ) {
