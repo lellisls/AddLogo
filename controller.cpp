@@ -9,7 +9,7 @@ Controller::Controller( QString input, QString logo_path, QString outputDir, Mai
 
   QStringList filters;
   files = QDir( input ).entryInfoList( filters, QDir::Files, QDir::Time );
-  logo = QImage( logo_path ).scaledToWidth( 120, Qt::SmoothTransformation );
+  logo = QImage( logo_path ).scaledToWidth( 180, Qt::SmoothTransformation );
   int numThreads = QThread::idealThreadCount( );
 
   for( int nThd = 0; nThd < numThreads; ++nThd ) {
