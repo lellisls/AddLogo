@@ -10,3 +10,5 @@ Atenção! Ele redimensiona as imagens para largura e altura máximos de 1024px 
 Se você está usando esse app (obrigado!) e quiser dar sugestões, entre em contato comigo por meio das [issues] (https://github.com/lellisls/AddLogo) do github.
 
 Instale no windows clicando [aqui](https://github.com/lellisls/AddLogo/blob/master/addlogo_installer.exe?raw=true).
+
+Abraço :smiley:
